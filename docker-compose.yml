@@ -1,0 +1,35 @@
+# Runtime de DEV uniquement (Postgres + Redis).
+# Les tests d'intégration NE l'utilisent PAS : ils démarrent leurs propres
+# conteneurs éphémères via Testcontainers (base fraîche par run).
+#
+#   docker compose up -d        # démarre pg + redis
+#   docker compose down -v      # arrête et purge les volumes
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: stone
+      POSTGRES_PASSWORD: stone
+      POSTGRES_DB: stone_daily
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U stone -d stone_daily"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:

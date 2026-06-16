@@ -1,0 +1,5 @@
+{
+  "name": "@stone-daily/shared",
+  "private": true,
+  "type": "module"
+}
