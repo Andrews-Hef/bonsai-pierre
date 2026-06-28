@@ -3,6 +3,7 @@
 // error). La scène de sculptage 3D (R3F) arrive à l'étape 4 ; le résultat serveur
 // et le classement à l'étape 5.
 import { useDaily } from './hooks/useDaily.js';
+import Sculptor from './components/Sculptor.jsx';
 
 function countVoxels(grid) {
   let n = 0;
@@ -65,22 +66,6 @@ function PuzzleMeta({ puzzle, startGrid, targetGrid }) {
   );
 }
 
-function Ready({ day }) {
-  return (
-    <Shell>
-      <PuzzleMeta puzzle={day.puzzle} startGrid={day.startGrid} targetGrid={day.targetGrid} />
-      <p className="text-bark-500 dark:text-beige-200/70 max-w-sm">
-        Pierre et cible décodées côté navigateur. La scène de sculptage 3D arrive à
-        l'étape 4.
-      </p>
-      <p className="text-xs text-sage-500 font-mono">
-        session token {day.sessionToken ? '✓ reçu' : '✗ manquant'} · started_at{' '}
-        {day.startedAt}
-      </p>
-    </Shell>
-  );
-}
-
 function AlreadyPlayed({ day }) {
   return (
     <Shell>
@@ -106,7 +91,7 @@ export default function App() {
     case 'already_played':
       return <AlreadyPlayed day={day} />;
     case 'ready':
-      return <Ready day={day} />;
+      return <Sculptor day={day} />;
     default:
       return <Loading />;
   }
