@@ -122,7 +122,9 @@ export async function runSeed(deps: SeedDeps, input: SeedInput): Promise<SeedRes
 }
 
 // ---------- CLI ----------
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Comparaison via pathToFileURL -> correcte aussi sur Windows (argv[1] = chemin
+// à backslashes, pas une URL file://).
+if (process.argv[1] && import.meta.url === (await import("node:url")).pathToFileURL(process.argv[1]).href) {
   const { parseArgs } = await import("node:util");
   const { mkdir, readFile, writeFile } = await import("node:fs/promises");
   const { dirname, resolve } = await import("node:path");

@@ -4,7 +4,7 @@
 // tests d'intégration (setup du conteneur Postgres éphémère).
 import { readFile, readdir } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import pg from "pg";
 
 const MIGRATIONS_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "../../../migrations");
@@ -43,7 +43,9 @@ export async function runMigrations(pool: pg.Pool, dir = MIGRATIONS_DIR): Promis
 }
 
 // Exécution directe en CLI : utilise DATABASE_URL.
-if (import.meta.url === `file://${process.argv[1]}`) {
+// (Comparaison via pathToFileURL -> correcte aussi sur Windows : argv[1] y est
+// un chemin à backslashes, pas une URL file://.)
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const { env } = await import("../config/env.js");
   const pool = new pg.Pool({ connectionString: env.DATABASE_URL });
   try {

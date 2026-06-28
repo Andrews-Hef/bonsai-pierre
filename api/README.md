@@ -6,10 +6,46 @@ L'API ne **lit** que des puzzles préparés à l'avance (cf. `seed:puzzle`).
 
 ## Prérequis
 - Node ≥ 22
-- Docker (pour `docker-compose` en dev, et les tests Testcontainers)
+- Docker + le plugin `docker compose` (infra de dev **et** tests Testcontainers)
+
+## Quickstart (zéro → API qui répond)
+Toutes les commandes se lancent **depuis `api/`** (le compose à la racine est
+ciblé via `-f ../docker-compose.yml`, on ne change donc jamais de répertoire).
+
+```bash
+cd api
+npm install
+
+# 1. Config : les valeurs d'exemple matchent déjà le docker-compose (aucune édition requise en dev)
+cp .env.example .env
+
+# 2. Infra de dev : Postgres + Redis, en attendant qu'ils soient "healthy"
+docker compose -f ../docker-compose.yml up -d --wait
+
+# 3. Schéma
+npm run db:migrate
+
+# 4. Semer le puzzle DU JOUR (date UTC) à partir d'une forme générée
+npm run seed:puzzle -- --date "$(date -u +%F)" --name "Coeur" --shape heart
+
+# 5. Lancer l'API (tsx watch)
+npm run dev
+```
+
+Vérifier dans un autre terminal :
+```bash
+curl http://localhost:8080/health
+# -> {"ok":true}
+
+# Le puzzle du jour (auth simulée : on passe un UUID en en-tête x-user-id)
+curl http://localhost:8080/v1/daily -H "x-user-id: 11111111-1111-1111-1111-111111111111"
+```
+
+> `/health` ne dépend ni de la base ni de Redis (il répond dès l'étape 5).
+> Les étapes 2–4 sont nécessaires aux endpoints `/v1/*` (puzzle, classement, stats).
 
 ## Variables d'environnement
-Copier `.env.example` → `.env` (validé au démarrage, fail-fast).
+Validées au démarrage (fail-fast). Les valeurs de `.env.example` suffisent en dev.
 
 | Variable | Rôle | Défaut |
 |---|---|---|
@@ -22,24 +58,12 @@ Copier `.env.example` → `.env` (validé au démarrage, fail-fast).
 | `STORAGE_FS_DIR` | répertoire des grilles en mode `fs` | `./.data/grids` |
 | `STORAGE_S3_*` | bucket/region/endpoint (requis si `STORAGE_DRIVER=s3`) | — |
 
-## Démarrer l'infra de dev
-```bash
-docker compose up -d        # Postgres + Redis (depuis la racine du repo)
-```
-
 ## Migrations
 Système maison : applique `migrations/*.sql` dans l'ordre, chacune en transaction,
-suivi dans la table `_migrations`.
+suivi dans la table `_migrations`. Lance Postgres (`docker compose … up -d --wait`) avant.
 ```bash
 npm run db:migrate          # applique les migrations en attente (utilise DATABASE_URL)
 npm run db:parity           # (dev) régénère le diff Drizzle pour vérifier la parité schéma
-```
-
-## Dev server
-```bash
-npm install
-npm run dev                 # tsx watch, recharge à chaud
-# GET http://localhost:8080/health -> { ok: true }
 ```
 
 ## Endpoints (préfixe `/v1`)
@@ -59,11 +83,12 @@ cible → atteignable), encode, upload, insère la row, et écrit un **PNG d'ape
 (3 vues orthographiques) pour le QA de lisibilité.
 
 ```bash
-# Depuis un .vox (Z-up corrigé par défaut via perm 0,2,1)
-npm run seed:puzzle -- --date 2026-06-20 --name "Oiseau" --input bird.vox
-
-# Depuis une forme générée (slugs : bird, fish, mug, heart, mushroom, tree, gem)
+# Forme générée (slugs : bird, fish, mug, heart, mushroom, tree, gem) — zéro fichier requis
 npm run seed:puzzle -- --date 2026-06-21 --name "Coeur" --shape heart
+
+# Depuis un .vox que tu fournis (Z-up corrigé par défaut via perm 0,2,1).
+# bird.vox est illustratif : remplace-le par ton propre fichier.
+npm run seed:puzzle -- --date 2026-06-20 --name "Oiseau" --input bird.vox
 
 # Écraser une date déjà semée
 npm run seed:puzzle -- --date 2026-06-21 --name "Coeur" --shape heart --force
@@ -75,5 +100,6 @@ Options : `--perm a,b,c` (correction d'axes), `--seed N` (entailles de la pierre
 ```bash
 npm test                    # Vitest : fonctions pures + intégration (Testcontainers)
 ```
-Les tests d'intégration démarrent un Postgres + un Redis éphémères (Docker requis).
-Base fraîche par run → pas d'état résiduel sur les tests one-shot/streak.
+Les tests d'intégration démarrent un Postgres + un Redis éphémères (Docker requis,
+indépendant du `docker compose` de dev). Base fraîche par run → pas d'état résiduel
+sur les tests one-shot/streak.
