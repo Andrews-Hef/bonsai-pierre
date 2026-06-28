@@ -7,6 +7,7 @@ import type { Db } from "./db/client.js";
 import type { RedisClient } from "./redis/client.js";
 import { dailyRoutes } from "./routes/daily.js";
 import { gridsRoutes } from "./routes/grids.js";
+import { submitRoutes } from "./routes/submit.js";
 import type { StorageClient } from "./storage/types.js";
 
 export interface AppDeps {
@@ -52,6 +53,7 @@ export function buildApp(deps: AppDeps): FastifyInstance {
 
   // Routes /v1.
   app.register(dailyRoutes);
+  app.register(submitRoutes);
   app.register(gridsRoutes);
 
   return app;
