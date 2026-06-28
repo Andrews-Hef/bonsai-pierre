@@ -8,6 +8,7 @@ import type { RedisClient } from "./redis/client.js";
 import { dailyRoutes } from "./routes/daily.js";
 import { gridsRoutes } from "./routes/grids.js";
 import { leaderboardRoutes } from "./routes/leaderboard.js";
+import { statsRoutes } from "./routes/stats.js";
 import { submitRoutes } from "./routes/submit.js";
 import type { StorageClient } from "./storage/types.js";
 
@@ -56,6 +57,7 @@ export function buildApp(deps: AppDeps): FastifyInstance {
   app.register(dailyRoutes);
   app.register(submitRoutes);
   app.register(leaderboardRoutes);
+  app.register(statsRoutes);
   app.register(gridsRoutes);
 
   return app;

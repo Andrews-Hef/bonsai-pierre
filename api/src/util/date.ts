@@ -4,11 +4,16 @@ export function todayUtc(now: Date = new Date()): string {
   return now.toISOString().slice(0, 10);
 }
 
+// `dateStr` (YYYY-MM-DD) moins `n` jours, en UTC.
+export function subDaysUtc(dateStr: string, n: number): string {
+  const d = new Date(`${dateStr}T00:00:00.000Z`);
+  d.setUTCDate(d.getUTCDate() - n);
+  return d.toISOString().slice(0, 10);
+}
+
 // La veille de `dateStr` (YYYY-MM-DD), en UTC. Sert au calcul de streak.
 export function yesterdayOf(dateStr: string): string {
-  const d = new Date(`${dateStr}T00:00:00.000Z`);
-  d.setUTCDate(d.getUTCDate() - 1);
-  return d.toISOString().slice(0, 10);
+  return subDaysUtc(dateStr, 1);
 }
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
