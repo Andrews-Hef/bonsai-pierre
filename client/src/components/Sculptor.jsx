@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import SculptScene from '../three/SculptScene.jsx';
 import ToolPalette from './ToolPalette.jsx';
+import HelpModal from './HelpModal.jsx';
 import { useSculpt } from '../hooks/useSculpt.js';
 
 // Ciseaux : `radius` = taille d'aperçu (px) pour ToolPalette ; `carve` = rayon de
@@ -26,6 +27,7 @@ export default function Sculptor({ day }) {
   );
   const [brushId, setBrushId] = useState('moyen');
   const [view, setView] = useState('face');
+  const [helpOpen, setHelpOpen] = useState(false);
 
   const brush = BRUSHES.find((b) => b.id === brushId) ?? BRUSHES[0];
   const onCarve = (voxel) => carveAt(voxel, brush.carve);
@@ -33,14 +35,24 @@ export default function Sculptor({ day }) {
 
   return (
     <div className="min-h-screen flex flex-col bg-beige-50 dark:bg-bark-900 text-bark-700 dark:text-beige-100">
-      <header className="flex items-baseline justify-between px-5 py-3 border-b border-bark-500/15 dark:border-beige-200/10">
+      <header className="flex items-center justify-between px-5 py-3 border-b border-bark-500/15 dark:border-beige-200/10">
         <h1 className="text-xl font-zen">🪨 Stone Daily</h1>
-        <p className="text-sm text-bark-500 dark:text-beige-200/70">
-          <span className="font-zen text-base text-bark-700 dark:text-beige-100">
-            {day.puzzle.shapeName}
-          </span>{' '}
-          · {day.puzzle.puzzleOn}
-        </p>
+        <div className="flex items-center gap-4">
+          <p className="text-sm text-bark-500 dark:text-beige-200/70">
+            <span className="font-zen text-base text-bark-700 dark:text-beige-100">
+              {day.puzzle.shapeName}
+            </span>{' '}
+            · {day.puzzle.puzzleOn}
+          </p>
+          <button
+            onClick={() => setHelpOpen(true)}
+            aria-label="Comment jouer"
+            title="Comment jouer"
+            className="h-8 w-8 rounded-full font-zen text-base border border-bark-500/30 dark:border-beige-200/20 text-bark-600 dark:text-beige-100 hover:bg-beige-100 dark:hover:bg-bark-700 transition"
+          >
+            ?
+          </button>
+        </div>
       </header>
 
       <div className="relative flex-1 min-h-0">
@@ -101,6 +113,8 @@ export default function Sculptor({ day }) {
           </button>
         </div>
       </footer>
+
+      <HelpModal open={helpOpen} onClose={() => setHelpOpen(false)} />
     </div>
   );
 }
