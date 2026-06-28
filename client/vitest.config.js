@@ -5,8 +5,11 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   // Le test d'accord importe shared/voxel.ts, hors de la racine client/.
   server: { fs: { allow: ['..'] } },
+  // JSX runtime automatique (pas de React plugin ici) -> pas d'import React requis
+  // dans les composants/tests .jsx.
+  esbuild: { jsx: 'automatic' },
   test: {
     environment: 'node',
-    include: ['test/**/*.test.js', 'src/**/*.test.js'],
+    include: ['test/**/*.test.{js,jsx}', 'src/**/*.test.{js,jsx}'],
   },
 });

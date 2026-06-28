@@ -1,15 +1,11 @@
 // Coquille de l'atelier Stone Daily, branchée sur l'API /v1.
-// Étape 3 : chargement de la journée + états (loading / ready / already_played /
-// error). La scène de sculptage 3D (R3F) arrive à l'étape 4 ; le résultat serveur
-// et le classement à l'étape 5.
+// États : loading / ready (sculptage) / already_played (résultat+classement) /
+// error. Le score affiché vient toujours du serveur, jamais de l'estimation locale.
+import { useEffect, useState } from 'react';
 import { useDaily } from './hooks/useDaily.js';
+import { getLeaderboard } from './api/daily.js';
 import Sculptor from './components/Sculptor.jsx';
-
-function countVoxels(grid) {
-  let n = 0;
-  for (let i = 0; i < grid.length; i++) n += grid[i];
-  return n;
-}
+import ResultScreen from './components/ResultScreen.jsx';
 
 function Shell({ children }) {
   return (
@@ -50,33 +46,45 @@ function ErrorView({ error }) {
   );
 }
 
-function PuzzleMeta({ puzzle, startGrid, targetGrid }) {
-  return (
-    <div className="text-sm text-bark-500 dark:text-beige-200/80 space-y-1">
-      <p>
-        <span className="font-zen text-lg text-bark-700 dark:text-beige-100">
-          {puzzle.shapeName}
-        </span>{' '}
-        · {puzzle.puzzleOn} · grille {puzzle.gridSize}³
-      </p>
-      <p className="font-mono text-xs text-bark-400 dark:text-beige-200/50">
-        pierre {countVoxels(startGrid)} voxels · cible {countVoxels(targetGrid)} voxels
-      </p>
-    </div>
-  );
-}
-
+// Déjà joué au chargement : on récupère le classement pour montrer le standing du
+// joueur (score serveur de sa soumission existante).
 function AlreadyPlayed({ day }) {
+  const [lb, setLb] = useState(undefined); // undefined = en cours, null = échec
+
+  useEffect(() => {
+    let on = true;
+    getLeaderboard(day.puzzle.puzzleOn)
+      .then((data) => on && setLb(data))
+      .catch(() => on && setLb(null));
+    return () => {
+      on = false;
+    };
+  }, [day.puzzle.puzzleOn]);
+
+  if (lb === undefined) return <Loading />;
+  if (lb === null) {
+    return (
+      <Shell>
+        <p className="text-bark-600 dark:text-beige-200">
+          Tu as déjà joué aujourd'hui. Reviens demain pour une nouvelle pierre.
+        </p>
+      </Shell>
+    );
+  }
+
   return (
-    <Shell>
-      <PuzzleMeta puzzle={day.puzzle} startGrid={day.startGrid} targetGrid={day.targetGrid} />
-      <p className="text-bark-600 dark:text-beige-200">
-        Tu as déjà joué aujourd'hui. Reviens demain pour une nouvelle pierre.
-      </p>
-      <p className="text-xs text-bark-400 dark:text-beige-200/50">
-        (Ton résultat et le classement s'afficheront ici à l'étape 5.)
-      </p>
-    </Shell>
+    <ResultScreen
+      puzzle={day.puzzle}
+      alreadyPlayed
+      result={{
+        score: lb.me?.score ?? 0,
+        resemblance: null,
+        duration_ms: null,
+        rank: lb.me?.rank ?? null,
+        percentile: lb.me?.percentile ?? null,
+        top: lb.top ?? [],
+      }}
+    />
   );
 }
 

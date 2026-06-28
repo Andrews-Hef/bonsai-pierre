@@ -2,7 +2,11 @@ import { useState } from 'react';
 import SculptScene from '../three/SculptScene.jsx';
 import ToolPalette from './ToolPalette.jsx';
 import HelpModal from './HelpModal.jsx';
+import ResultScreen from './ResultScreen.jsx';
 import { useSculpt } from '../hooks/useSculpt.js';
+import { encodeGridBrowser } from '../voxel/codec.js';
+import { postSubmit, getLeaderboard } from '../api/daily.js';
+import { ApiError } from '../api/client.js';
 
 // Ciseaux : `radius` = taille d'aperçu (px) pour ToolPalette ; `carve` = rayon de
 // taille en voxels passé à carveSphere.
@@ -29,9 +33,65 @@ export default function Sculptor({ day }) {
   const [view, setView] = useState('face');
   const [helpOpen, setHelpOpen] = useState(false);
 
+  // Soumission. result vient EXCLUSIVEMENT de la réponse serveur.
+  const [result, setResult] = useState(null); // null tant qu'on sculpte
+  const [alreadyPlayed, setAlreadyPlayed] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
+
   const brush = BRUSHES.find((b) => b.id === brushId) ?? BRUSHES[0];
   const onCarve = (voxel) => carveAt(voxel, brush.carve);
   const pct = Math.round(estimate * 100);
+
+  async function submitNow() {
+    setConfirming(false);
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      // On encode la grille-vérité MUTÉE (gridRef), pas l'estimation locale.
+      const finalGrid = await encodeGridBrowser(gridRef.current);
+      const resp = await postSubmit({ session_token: day.sessionToken, final_grid: finalGrid });
+      setResult(resp); // { resemblance, duration_ms, score, rank, percentile, top[] }
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 409 && err.code === 'already_played') {
+        // Déjà soumis aujourd'hui : on montre quand même le standing via le classement.
+        try {
+          const lb = await getLeaderboard(day.puzzle.puzzleOn);
+          setAlreadyPlayed(true);
+          setResult({
+            score: lb.me?.score ?? 0,
+            resemblance: null,
+            duration_ms: null,
+            rank: lb.me?.rank ?? null,
+            percentile: lb.me?.percentile ?? null,
+            top: lb.top ?? [],
+          });
+        } catch {
+          setSubmitError('Déjà joué aujourd’hui, mais le classement est indisponible.');
+        }
+      } else if (err instanceof ApiError && err.status === 422) {
+        setSubmitError('Grille invalide — réessaie après quelques tailles.');
+      } else if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
+        setSubmitError('Session expirée ou invalide. Recharge la page pour rejouer.');
+      } else {
+        setSubmitError('Envoi impossible (réseau ou serveur). Réessaie.');
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  if (result) {
+    return (
+      <ResultScreen
+        puzzle={day.puzzle}
+        result={result}
+        localEstimate={estimate}
+        alreadyPlayed={alreadyPlayed}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-beige-50 dark:bg-bark-900 text-bark-700 dark:text-beige-100">
@@ -93,24 +153,51 @@ export default function Sculptor({ day }) {
             </button>
           ))}
         </div>
+
+        {submitError && (
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-lg bg-red-900/80 text-beige-50 text-sm px-4 py-2 shadow">
+            {submitError}
+          </div>
+        )}
       </div>
 
       <footer className="flex items-center justify-between gap-4 px-5 py-4 border-t border-bark-500/15 dark:border-beige-200/10">
-        <ToolPalette tools={BRUSHES} currentId={brushId} onSelect={setBrushId} />
+        <ToolPalette tools={BRUSHES} currentId={brushId} onSelect={setBrushId} disabled={submitting} />
         <div className="flex items-center gap-3">
           <button
             onClick={reset}
-            className="px-4 py-2 rounded-xl font-zen text-sm border border-bark-500/30 dark:border-beige-200/20 text-bark-600 dark:text-beige-200 hover:bg-beige-100 dark:hover:bg-bark-700 transition"
+            disabled={submitting}
+            className="px-4 py-2 rounded-xl font-zen text-sm border border-bark-500/30 dark:border-beige-200/20 text-bark-600 dark:text-beige-200 hover:bg-beige-100 dark:hover:bg-bark-700 transition disabled:opacity-40"
           >
             Recommencer
           </button>
-          <button
-            disabled
-            title="Soumission disponible à l'étape 5"
-            className="px-5 py-2 rounded-xl font-zen text-sm bg-sage-600 text-beige-50 opacity-40 cursor-not-allowed"
-          >
-            Valider (étape 5)
-          </button>
+
+          {confirming ? (
+            <>
+              <button
+                onClick={() => setConfirming(false)}
+                disabled={submitting}
+                className="px-4 py-2 rounded-xl font-zen text-sm border border-bark-500/30 dark:border-beige-200/20 text-bark-600 dark:text-beige-200 hover:bg-beige-100 dark:hover:bg-bark-700 transition"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={submitNow}
+                disabled={submitting}
+                className="px-5 py-2 rounded-xl font-zen text-sm bg-sage-600 text-beige-50 hover:bg-sage-500 transition disabled:opacity-50"
+              >
+                {submitting ? 'Envoi…' : 'Confirmer (1 seul essai)'}
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => setConfirming(true)}
+              disabled={submitting}
+              className="px-5 py-2 rounded-xl font-zen text-sm bg-sage-600 text-beige-50 hover:bg-sage-500 transition disabled:opacity-50"
+            >
+              Valider
+            </button>
+          )}
         </div>
       </footer>
 
