@@ -14,7 +14,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "db:migrate": "tsx src/db/migrate.ts",
-    "db:parity": "drizzle-kit generate --name parity_check"
+    "db:parity": "drizzle-kit generate --name parity_check",
+    "seed:puzzle": "tsx src/tools/seed.ts"
   },
   "dependencies": {
     "drizzle-orm": "^0.36.4",
@@ -22,6 +23,7 @@
     "ioredis": "^5.4.1",
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.13.1",
+    "pngjs": "^7.0.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
@@ -30,6 +32,7 @@
     "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^22.10.1",
     "@types/pg": "^8.11.10",
+    "@types/pngjs": "^6.0.5",
     "drizzle-kit": "^0.28.1",
     "testcontainers": "^10.16.0",
     "tsx": "^4.19.2",
