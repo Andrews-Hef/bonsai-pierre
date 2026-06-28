@@ -10,7 +10,7 @@ async function main() {
   const pool = createPool(env.DATABASE_URL);
   const redis = createRedis(env.REDIS_URL);
   const storage = createStorage();
-  const app = buildApp({ db: createDb(pool), redis, storage });
+  const app = buildApp({ db: createDb(pool), redis, storage, jwtSecret: env.JWT_SECRET });
 
   const close = async () => {
     await app.close();

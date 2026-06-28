@@ -5,12 +5,17 @@ import Fastify, { type FastifyInstance, type preHandlerHookHandler } from "fasti
 import { requireUser } from "./auth.js";
 import type { Db } from "./db/client.js";
 import type { RedisClient } from "./redis/client.js";
+import { dailyRoutes } from "./routes/daily.js";
+import { gridsRoutes } from "./routes/grids.js";
 import type { StorageClient } from "./storage/types.js";
 
 export interface AppDeps {
   db: Db;
   redis: RedisClient;
   storage: StorageClient;
+  // Secret HS256 du token de session. Injecté (pas importé d'env) pour que les
+  // tests Testcontainers n'aient pas à charger le singleton env au boot.
+  jwtSecret: string;
 }
 
 declare module "fastify" {
@@ -18,6 +23,7 @@ declare module "fastify" {
     db: Db;
     redis: RedisClient;
     storage: StorageClient;
+    jwtSecret: string;
     // preHandler d'auth (x-user-id UUID -> req.userId, sinon 401).
     requireUser: preHandlerHookHandler;
   }
@@ -37,11 +43,16 @@ export function buildApp(deps: AppDeps): FastifyInstance {
   app.decorate("db", deps.db);
   app.decorate("redis", deps.redis);
   app.decorate("storage", deps.storage);
+  app.decorate("jwtSecret", deps.jwtSecret);
   app.decorate("requireUser", requireUser);
   app.decorateRequest("userId", undefined);
 
   // Public (pas d'auth).
   app.get("/health", async () => ({ ok: true }));
+
+  // Routes /v1.
+  app.register(dailyRoutes);
+  app.register(gridsRoutes);
 
   return app;
 }
