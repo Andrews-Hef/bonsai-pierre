@@ -1,0 +1,14 @@
+{
+  "gridSize": 24,
+  "_note": "Généré une fois depuis le vrai pipeline serveur (api makeShape + shared/voxel.ts encodeGrid). base64 = gzip(packbits big-endian) canonique. Grille connue (voxelCount fixé) pour le test d'accord du codec navigateur. Régénérer en relançant makeShape+encodeGrid sur ces slugs si la convention de bits change.",
+  "shapes": {
+    "gem": {
+      "voxelCount": 384,
+      "base64": "H4sIAAAAAAAACmNgGAWjABuQACPKTbABI7JNg5tQB0Zw08hwBsSE/2AEN41IhyE7A2wC4/8Gxv8NCNOIdBi1zKGWv7A6jLxwxnQYJfGOZtooGAXYAAAIJk1SwAYAAA=="
+    },
+    "heart": {
+      "voxelCount": 980,
+      "base64": "H4sIAAAAAAAACmNgGAWDCdiAUR2YpMSQOgaG/wyM/xvINwrJEOb/Bxj+k+4qCbAWJENINkcC4QxkQ9j/PyDBHLghMJeQbI4EuiHI5rD/fwAyhxjHUMscavkL0yhKwhnZNArjHRlQng6xGUWFLEZ5Ph0FFAMAfQoUg8AGAAA="
+    }
+  }
+}
