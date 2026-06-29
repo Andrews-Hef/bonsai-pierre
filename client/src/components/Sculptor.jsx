@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import SculptScene from '../three/SculptScene.jsx';
+import { lazy, Suspense, useState } from 'react';
 import ToolPalette from './ToolPalette.jsx';
 import HelpModal from './HelpModal.jsx';
 import ResultScreen from './ResultScreen.jsx';
@@ -21,6 +20,22 @@ const VIEWS = [
   { id: 'profil', label: 'Profil' },
   { id: 'dessus', label: 'Dessus' },
 ];
+
+// La scène three (fiber + drei + three, ~970 kB) est le gros du poids. On la
+// charge en différé (chunk séparé) pour que le bundle initial reste léger —
+// déterminant sur mobile. Le reste de l'écran (HUD, ciseaux) s'affiche tout de
+// suite ; la scène se substitue au fallback dès que son chunk est prêt.
+const SculptScene = lazy(() => import('../three/SculptScene.jsx'));
+
+function SceneFallback() {
+  return (
+    <div className="absolute inset-0 flex items-center justify-center bg-beige-50 dark:bg-bark-900">
+      <p className="text-bark-400 dark:text-beige-200/60 animate-pulse">
+        Préparation de l'atelier…
+      </p>
+    </div>
+  );
+}
 
 // Écran de jeu : la pierre du jour à tailler vers la forme cible.
 // day = { puzzle, startGrid, targetGrid, sessionToken, startedAt }.
@@ -116,13 +131,15 @@ export default function Sculptor({ day }) {
       </header>
 
       <div className="relative flex-1 min-h-0">
-        <SculptScene
-          gridRef={gridRef}
-          version={version}
-          target={day.targetGrid}
-          view={view}
-          onCarve={onCarve}
-        />
+        <Suspense fallback={<SceneFallback />}>
+          <SculptScene
+            gridRef={gridRef}
+            version={version}
+            target={day.targetGrid}
+            view={view}
+            onCarve={onCarve}
+          />
+        </Suspense>
 
         {/* Estimation LOCALE — le score officiel est calculé par le serveur. */}
         <div className="absolute top-4 left-4 rounded-xl bg-beige-100/85 dark:bg-bark-800/85 backdrop-blur px-4 py-3 shadow-sm">
