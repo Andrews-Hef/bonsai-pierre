@@ -96,6 +96,18 @@ npm run seed:puzzle -- --date 2026-06-21 --name "Coeur" --shape heart --force
 Options : `--perm a,b,c` (correction d'axes), `--seed N` (entailles de la pierre),
 `--out chemin.png` (aperçu, défaut `./.preview/<date>-<nom>.png`).
 
+## Semer un utilisateur de dev
+`/v1/daily/submit` insère une `submission` dont la FK `user_id` pointe vers `users`.
+Sans row correspondante, la soumission échoue. `seed:user` crée (ou met à jour) cette
+row de façon **reproductible et idempotente** — pas de SQL ad hoc. Ré-exécutable :
+il ne réaligne que le `display_name`, sans toucher au streak ni à `last_played_on`.
+
+```bash
+# Le front (client/) envoie par défaut cet UUID de dev en en-tête x-user-id.
+npm run seed:user -- --id 00000000-0000-4000-8000-000000000001 --name "Joueur dev"
+```
+Options : `--id <uuid>` (requis), `--name "<Nom>"` (défaut `Joueur dev`).
+
 ## Tests
 ```bash
 npm test                    # Vitest : fonctions pures + intégration (Testcontainers)

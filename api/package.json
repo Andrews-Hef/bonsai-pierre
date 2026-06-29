@@ -15,7 +15,8 @@
     "test:watch": "vitest",
     "db:migrate": "tsx src/db/migrate.ts",
     "db:parity": "drizzle-kit generate --name parity_check",
-    "seed:puzzle": "tsx src/tools/seed.ts"
+    "seed:puzzle": "tsx src/tools/seed.ts",
+    "seed:user": "tsx src/tools/seedUser.ts"
   },
   "dependencies": {
     "drizzle-orm": "^0.36.4",
