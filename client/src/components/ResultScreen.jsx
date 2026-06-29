@@ -17,7 +17,7 @@ const pct = (x) => (x == null ? '—' : `${Math.round(x * 100)} %`);
 export default function ResultScreen({ puzzle, result, localEstimate, alreadyPlayed }) {
   // result : { score, resemblance?, duration_ms?, rank, percentile, top[] }
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-beige-50 dark:bg-bark-900 text-bark-700 dark:text-beige-100 px-6 py-10">
+    <div className="fade-in min-h-[100dvh] flex flex-col items-center justify-center gap-6 bg-beige-50 dark:bg-bark-900 text-bark-700 dark:text-beige-100 px-6 py-10">
       <h1 className="text-2xl font-zen">🪨 Stone Daily</h1>
 
       {alreadyPlayed && (
@@ -36,7 +36,7 @@ export default function ResultScreen({ puzzle, result, localEstimate, alreadyPla
         </p>
       </div>
 
-      <div className="flex gap-8 text-center">
+      <div className="flex flex-wrap justify-center gap-6 sm:gap-8 text-center">
         <Metric label="Ressemblance" value={pct(result.resemblance)} />
         <Metric label="Temps" value={formatDuration(result.duration_ms)} />
         <Metric

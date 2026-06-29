@@ -9,7 +9,7 @@ import ResultScreen from './components/ResultScreen.jsx';
 
 function Shell({ children }) {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-beige-50 dark:bg-bark-900 text-bark-700 dark:text-beige-100 px-6 text-center">
+    <div className="min-h-[100dvh] flex flex-col items-center justify-center gap-6 bg-beige-50 dark:bg-bark-900 text-bark-700 dark:text-beige-100 px-6 text-center">
       <h1 className="text-3xl font-zen">🪨 Stone Daily</h1>
       {children}
     </div>

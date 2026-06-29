@@ -109,28 +109,28 @@ export default function Sculptor({ day }) {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-beige-50 dark:bg-bark-900 text-bark-700 dark:text-beige-100">
-      <header className="flex items-center justify-between px-5 py-3 border-b border-bark-500/15 dark:border-beige-200/10">
-        <h1 className="text-xl font-zen">🪨 Stone Daily</h1>
-        <div className="flex items-center gap-4">
-          <p className="text-sm text-bark-500 dark:text-beige-200/70">
+    <div className="min-h-[100dvh] flex flex-col bg-beige-50 dark:bg-bark-900 text-bark-700 dark:text-beige-100">
+      <header className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3 border-b border-bark-500/15 dark:border-beige-200/10">
+        <h1 className="text-lg sm:text-xl font-zen shrink-0">🪨 Stone Daily</h1>
+        <div className="flex items-center gap-3 min-w-0">
+          <p className="text-sm text-bark-500 dark:text-beige-200/70 truncate">
             <span className="font-zen text-base text-bark-700 dark:text-beige-100">
               {day.puzzle.shapeName}
-            </span>{' '}
-            · {day.puzzle.puzzleOn}
+            </span>
+            <span className="hidden sm:inline"> · {day.puzzle.puzzleOn}</span>
           </p>
           <button
             onClick={() => setHelpOpen(true)}
             aria-label="Comment jouer"
             title="Comment jouer"
-            className="h-8 w-8 rounded-full font-zen text-base border border-bark-500/30 dark:border-beige-200/20 text-bark-600 dark:text-beige-100 hover:bg-beige-100 dark:hover:bg-bark-700 transition"
+            className="h-9 w-9 shrink-0 rounded-full font-zen text-base border border-bark-500/30 dark:border-beige-200/20 text-bark-600 dark:text-beige-100 hover:bg-beige-100 dark:hover:bg-bark-700 transition"
           >
             ?
           </button>
         </div>
       </header>
 
-      <div className="relative flex-1 min-h-0">
+      <div className="relative flex-1 min-h-0 select-none touch-none">
         <Suspense fallback={<SceneFallback />}>
           <SculptScene
             gridRef={gridRef}
@@ -141,9 +141,18 @@ export default function Sculptor({ day }) {
           />
         </Suspense>
 
+        {/* Croix centrale : repère du centre de la pierre (aide au cadrage au
+            doigt, vues fixes). Décorative, jamais cliquable. */}
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+          <div className="relative h-6 w-6 opacity-30">
+            <span className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-bark-600 dark:bg-beige-100" />
+            <span className="absolute top-1/2 left-0 h-px w-full -translate-y-1/2 bg-bark-600 dark:bg-beige-100" />
+          </div>
+        </div>
+
         {/* Estimation LOCALE — le score officiel est calculé par le serveur. */}
-        <div className="absolute top-4 left-4 rounded-xl bg-beige-100/85 dark:bg-bark-800/85 backdrop-blur px-4 py-3 shadow-sm">
-          <p className="text-3xl font-zen text-sage-600 dark:text-sage-400 leading-none">
+        <div className="absolute top-3 left-3 sm:top-4 sm:left-4 rounded-xl bg-beige-100/85 dark:bg-bark-800/85 backdrop-blur px-3 py-2 sm:px-4 sm:py-3 shadow-sm">
+          <p className="text-2xl sm:text-3xl font-zen text-sage-600 dark:text-sage-400 leading-none">
             {pct}%
           </p>
           <p className="text-[11px] text-bark-400 dark:text-beige-200/50 mt-1">
@@ -155,7 +164,7 @@ export default function Sculptor({ day }) {
         </div>
 
         {/* Vues fixes (pas d'orbite). */}
-        <div className="absolute top-4 right-4 flex flex-col gap-2">
+        <div className="absolute top-3 right-3 sm:top-4 sm:right-4 flex flex-col gap-1.5 sm:gap-2">
           {VIEWS.map((v) => (
             <button
               key={v.id}
@@ -172,19 +181,21 @@ export default function Sculptor({ day }) {
         </div>
 
         {submitError && (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-lg bg-red-900/80 text-beige-50 text-sm px-4 py-2 shadow">
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[90%] max-w-sm text-center rounded-lg bg-red-900/80 text-beige-50 text-sm px-4 py-2 shadow">
             {submitError}
           </div>
         )}
       </div>
 
-      <footer className="flex items-center justify-between gap-4 px-5 py-4 border-t border-bark-500/15 dark:border-beige-200/10">
-        <ToolPalette tools={BRUSHES} currentId={brushId} onSelect={setBrushId} disabled={submitting} />
-        <div className="flex items-center gap-3">
+      <footer className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 sm:px-5 py-3 sm:py-4 border-t border-bark-500/15 dark:border-beige-200/10">
+        <div className="flex justify-center sm:justify-start">
+          <ToolPalette tools={BRUSHES} currentId={brushId} onSelect={setBrushId} disabled={submitting} />
+        </div>
+        <div className="flex items-center justify-end gap-2 sm:gap-3">
           <button
             onClick={reset}
             disabled={submitting}
-            className="px-4 py-2 rounded-xl font-zen text-sm border border-bark-500/30 dark:border-beige-200/20 text-bark-600 dark:text-beige-200 hover:bg-beige-100 dark:hover:bg-bark-700 transition disabled:opacity-40"
+            className="px-4 py-2.5 rounded-xl font-zen text-sm border border-bark-500/30 dark:border-beige-200/20 text-bark-600 dark:text-beige-200 hover:bg-beige-100 dark:hover:bg-bark-700 transition disabled:opacity-40"
           >
             Recommencer
           </button>
@@ -194,14 +205,14 @@ export default function Sculptor({ day }) {
               <button
                 onClick={() => setConfirming(false)}
                 disabled={submitting}
-                className="px-4 py-2 rounded-xl font-zen text-sm border border-bark-500/30 dark:border-beige-200/20 text-bark-600 dark:text-beige-200 hover:bg-beige-100 dark:hover:bg-bark-700 transition"
+                className="px-4 py-2.5 rounded-xl font-zen text-sm border border-bark-500/30 dark:border-beige-200/20 text-bark-600 dark:text-beige-200 hover:bg-beige-100 dark:hover:bg-bark-700 transition"
               >
                 Annuler
               </button>
               <button
                 onClick={submitNow}
                 disabled={submitting}
-                className="px-5 py-2 rounded-xl font-zen text-sm bg-sage-600 text-beige-50 hover:bg-sage-500 transition disabled:opacity-50"
+                className="px-5 py-2.5 rounded-xl font-zen text-sm bg-sage-600 text-beige-50 hover:bg-sage-500 transition disabled:opacity-50"
               >
                 {submitting ? 'Envoi…' : 'Confirmer (1 seul essai)'}
               </button>
@@ -210,7 +221,7 @@ export default function Sculptor({ day }) {
             <button
               onClick={() => setConfirming(true)}
               disabled={submitting}
-              className="px-5 py-2 rounded-xl font-zen text-sm bg-sage-600 text-beige-50 hover:bg-sage-500 transition disabled:opacity-50"
+              className="px-5 py-2.5 rounded-xl font-zen text-sm bg-sage-600 text-beige-50 hover:bg-sage-500 transition disabled:opacity-50"
             >
               Valider
             </button>

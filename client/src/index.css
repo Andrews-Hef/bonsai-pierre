@@ -13,6 +13,8 @@ body {
   font-family: 'Noto Serif', Georgia, serif;
   -webkit-font-smoothing: antialiased;
   transition: background-color 250ms ease, color 250ms ease;
+  /* Mobile : pas de pull-to-refresh ni de rebond qui parasiterait la taille. */
+  overscroll-behavior: none;
 }
 
 html.dark body {
@@ -22,4 +24,21 @@ html.dark body {
 
 canvas {
   display: block;
+  /* Les gestes du doigt sur la pierre taillent — ils ne doivent jamais
+     scroller/zoomer la page. */
+  touch-action: none;
+}
+
+/* Apparition douce de la scène et de l'écran de résultat. */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+
+.fade-in {
+  animation: fade-in 300ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fade-in { animation: none; }
 }
