@@ -12,23 +12,59 @@ L'API ne **lit** que des puzzles préparés à l'avance (cf. `seed:puzzle`).
 Toutes les commandes se lancent **depuis `api/`** (le compose à la racine est
 ciblé via `-f ../docker-compose.yml`, on ne change donc jamais de répertoire).
 
+Étapes 1 à 3 (identiques quel que soit le shell) :
 ```bash
 cd api
 npm install
 
 # 1. Config : les valeurs d'exemple matchent déjà le docker-compose (aucune édition requise en dev)
-cp .env.example .env
+cp .env.example .env      # PowerShell : Copy-Item .env.example .env
 
 # 2. Infra de dev : Postgres + Redis, en attendant qu'ils soient "healthy"
 docker compose -f ../docker-compose.yml up -d --wait
 
 # 3. Schéma
 npm run db:migrate
+```
 
-# 4. Semer le puzzle DU JOUR (date UTC) à partir d'une forme générée
-npm run seed:puzzle -- --date "$(date -u +%F)" --name "Coeur" --shape heart
+Étape 4 — **semer le puzzle du jour + l'utilisateur de dev**. La date est en UTC ;
+la substitution de commande diffère selon le shell, choisis ta colonne :
 
-# 5. Lancer l'API (tsx watch)
+<table>
+<tr><th>bash / macOS / Linux / Git Bash</th><th>PowerShell (Windows)</th></tr>
+<tr><td>
+
+```bash
+DAY=$(date -u +%F)
+
+npm run seed:puzzle -- \
+  --date "$DAY" --name "Coeur" --shape heart
+
+npm run seed:user -- \
+  --id 00000000-0000-4000-8000-000000000001 \
+  --name "Joueur dev"
+```
+
+</td><td>
+
+```powershell
+$DAY = (Get-Date).ToUniversalTime().ToString('yyyy-MM-dd')
+
+# ⚠ PowerShell : `npm run <s> -- --flag` avale les
+# --flags → appeler npx tsx directement.
+npx tsx src/tools/seed.ts `
+  --date $DAY --name "Coeur" --shape heart
+
+npx tsx src/tools/seedUser.ts `
+  --id 00000000-0000-4000-8000-000000000001 `
+  --name "Joueur dev"
+```
+
+</td></tr>
+</table>
+
+Étape 5 — lancer l'API (`tsx watch`, laisse tourner) :
+```bash
 npm run dev
 ```
 
@@ -38,11 +74,13 @@ curl http://localhost:8080/health
 # -> {"ok":true}
 
 # Le puzzle du jour (auth simulée : on passe un UUID en en-tête x-user-id)
-curl http://localhost:8080/v1/daily -H "x-user-id: 11111111-1111-1111-1111-111111111111"
+curl http://localhost:8080/v1/daily -H "x-user-id: 00000000-0000-4000-8000-000000000001"
 ```
 
 > `/health` ne dépend ni de la base ni de Redis (il répond dès l'étape 5).
 > Les étapes 2–4 sont nécessaires aux endpoints `/v1/*` (puzzle, classement, stats).
+> `seed:user` n'est pas requis pour `GET /v1/daily`, mais l'est pour `/v1/daily/submit`
+> et `/v1/me/stats` (insert avec FK vers `users`) — d'où sa présence dès l'étape 4.
 
 ## Variables d'environnement
 Validées au démarrage (fail-fast). Les valeurs de `.env.example` suffisent en dev.
@@ -81,6 +119,9 @@ En dev/test on passe simplement cet en-tête.
 ou forme générée), normalise en 24³, fabrique la pierre brute (qui enveloppe la
 cible → atteignable), encode, upload, insère la row, et écrit un **PNG d'aperçu**
 (3 vues orthographiques) pour le QA de lisibilité.
+
+> **PowerShell** : `npm run seed:puzzle -- --flag` avale les `--flags` ; remplace
+> `npm run seed:puzzle --` par `npx tsx src/tools/seed.ts` (mêmes arguments).
 
 ```bash
 # Forme générée (slugs : bird, fish, mug, heart, mushroom, tree, gem) — zéro fichier requis
